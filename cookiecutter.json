@@ -1,0 +1,8 @@
+{
+  "project_name": "Matt's Python Package Template",
+  "project_slug": "{{ cookiecutter.project_name | slugify }}",
+  "package_name": "{{ cookiecutter.project_name| slugify(separator='_') }}",
+  "author": "Matt Krainski",
+  "email": "mateusz@krainski.eu",
+  "_copy_without_render": [".github/*"]
+}

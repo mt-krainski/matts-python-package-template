@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+          version: ${{ vars.POETRY_VERSION }}
+      - name: Install Poe
+        run: |
+          pipx install poethepoet
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('./poetry.lock') }}
+      - name: Install dependencies
+        working-directory: .
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      - name: Install project
+        working-directory: .
+        run: |
+          poetry install --no-interaction
+          poe configure
+      - name: Run tests
+        working-directory: .
+        run: |
+          source .venv/bin/activate
+          poe test-full
+      - name: Run lint
+        working-directory: .
+        run: |
+          source .venv/bin/activate
+          poe lint
+      - name: Run hooks
+        working-directory: .
+        run: |
+          source .venv/bin/activate
+          poe run-hooks
+
+  ai-review:
+    name: "AI Code Review"
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request'}}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: AI Code Review
+        uses: freeedcom/ai-codereviewer@v2.7.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_MODEL: "gpt-4o"
+          exclude: "**/*.json, **/*.md, **/*.lock"
+
+  dependabot:
+    name: "Dependabot"
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}}
+    permissions:
+      contents: write
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Enable auto-merge for Dependabot PRs
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
