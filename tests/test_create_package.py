@@ -1,16 +1,17 @@
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 
 from cookiecutter.main import cookiecutter
 
 
-def try_subprocess(*args, **kwargs):
-    result = subprocess.run(*args, **kwargs)
+def _try_subprocess(*args, **kwargs):
+    result = subprocess.run(*args, **kwargs)  # noqa: S603
     result.check_returncode()
 
 
 def test_create_package():
+    """Create a new package from template and run basic checks."""
     if os.path.exists("test-package"):
         shutil.rmtree("test-package")
 
@@ -27,8 +28,8 @@ def test_create_package():
     assert os.path.isdir("test-package")
     assert os.path.exists("test-package/pyproject.toml")
 
-    try_subprocess(["poe", "configure"], cwd="test-package")
-    try_subprocess(["poe", "lint"], cwd="test-package")
-    try_subprocess(["poe", "test"], cwd="test-package")
+    _try_subprocess(["poe", "configure"], cwd="test-package")
+    _try_subprocess(["poe", "lint"], cwd="test-package")
+    _try_subprocess(["poe", "test"], cwd="test-package")
 
     shutil.rmtree("test-package")
