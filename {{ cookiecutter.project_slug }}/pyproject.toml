@@ -59,7 +59,8 @@ configure = "./scripts/configure.sh"
 update = "./scripts/update.sh"
 lint = "flake8 ."
 test = 'coverage run -m pytest --showlocals'
-run-hooks = "pre-commit run --all-files"
+hooks-run = "pre-commit run --all-files"
+hooks-update = "pre-commit auto-update"
 
 [tool.poe.tasks.test-full]
 sequence = [

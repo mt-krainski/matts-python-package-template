@@ -10,8 +10,8 @@ repos:
       - id: check-added-large-files
       - id: check-toml
       - id: file-contents-sorter
-        files: .spellcheck-allowlist.txt
-        args: [./yafs/.spellcheck-allowlist.txt]
+        files: .spellcheck-allowlist
+        args: [./.spellcheck-allowlist]
       - id: pretty-format-json
         args:
           - "--autofix"
@@ -21,12 +21,20 @@ repos:
     rev: 24.10.0
     hooks:
       - id: black
+      {%- if cookiecutter.use_jupyter == 'y' %}
       - id: black-jupyter
+      {%- endif %}
+  {%- if cookiecutter.use_jupyter == 'y' %}
   - repo: https://github.com/srstevenson/nb-clean
     rev: 4.0.1
     hooks:
       - id: nb-clean
+  {%- endif %}
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.0
     hooks:
       - id: gitleaks
+  - repo: https://github.com/PyCQA/isort
+    rev: v5.13.0
+    hooks:
+      - id: isort

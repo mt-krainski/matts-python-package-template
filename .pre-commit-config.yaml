@@ -5,13 +5,15 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        exclude: "{{ cookiecutter.project_slug }}"
       - id: check-ast
+        exclude: "{{ cookiecutter.project_slug }}"
       - id: check-json
       - id: check-added-large-files
       - id: check-toml
       - id: file-contents-sorter
-        files: .spellcheck-allowlist.txt
-        args: [./yafs/.spellcheck-allowlist.txt]
+        files: .spellcheck-allowlist
+        args: [./.spellcheck-allowlist]
       - id: pretty-format-json
         args:
           - "--autofix"
@@ -21,12 +23,12 @@ repos:
     rev: 24.10.0
     hooks:
       - id: black
-      - id: black-jupyter
-  - repo: https://github.com/srstevenson/nb-clean
-    rev: 4.0.1
-    hooks:
-      - id: nb-clean
+        exclude: "{{ cookiecutter.project_slug }}"
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.0
     hooks:
       - id: gitleaks
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort

@@ -62,7 +62,7 @@ jobs:
         working-directory: .
         run: |
           source .venv/bin/activate
-          poe run-hooks
+          poe hooks-run
 
   ai-review:
     name: "AI Code Review"
