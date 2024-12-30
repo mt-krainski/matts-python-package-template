@@ -35,6 +35,6 @@ repos:
     hooks:
       - id: gitleaks
   - repo: https://github.com/PyCQA/isort
-    rev: v5.13.0
+    rev: 5.13.2
     hooks:
       - id: isort
