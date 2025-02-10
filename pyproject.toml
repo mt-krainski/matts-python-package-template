@@ -27,7 +27,7 @@ flake8-pyproject = "^1.2.3"
 black = "^25.1.0"
 flake8-black = "^0.3.6"
 isort = "^6.0.0"
-coverage = "^7.6.9"
+coverage = "^7.6.11"
 pre-commit = "^4.1.0"
 
 [build-system]
