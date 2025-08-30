@@ -64,6 +64,19 @@ jobs:
           source .venv/bin/activate
           poe hooks-run
 
+      - name: Regenerate example package and verify clean
+        working-directory: .
+        run: |
+          set -euo pipefail
+          rm -rf example-package
+          cookiecutter . --no-input --overwrite-if-exists project_name="Example Package" -o .
+          if git status --porcelain | sed '/example-package\/README.md/d' | grep -q .; then
+            echo "Unexpected changes after regenerating template (excluding example-package/README.md):"
+            git status --porcelain
+            git --no-pager diff --stat
+            exit 1
+          fi
+
   dependabot:
     name: "Dependabot"
     needs: [test]
