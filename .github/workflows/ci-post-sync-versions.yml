@@ -46,25 +46,41 @@ jobs:
       - name: Install Cookiecutter
         run: pipx install cookiecutter
 
+      # Mitigation: Disable pip and poetry caches to prevent default branch cache poisoning
       - name: Install dependencies
+        env:
+          PIP_NO_CACHE_DIR: "off"
+          POETRY_CACHE_DIR: "${{ runner.temp }}/poetry-cache"
         run: poetry install --no-interaction --no-root
 
       - name: Install project
+        env:
+          PIP_NO_CACHE_DIR: "off"
+          POETRY_CACHE_DIR: "${{ runner.temp }}/poetry-cache"
         run: |
           poetry install --no-interaction
           poe configure
 
       - name: Run tests
+        env:
+          PIP_NO_CACHE_DIR: "off"
+          POETRY_CACHE_DIR: "${{ runner.temp }}/poetry-cache"
         run: |
           source .venv/bin/activate
           poe test-full
 
       - name: Run lint
+        env:
+          PIP_NO_CACHE_DIR: "off"
+          POETRY_CACHE_DIR: "${{ runner.temp }}/poetry-cache"
         run: |
           source .venv/bin/activate
           poe lint
 
       - name: Run hooks
+        env:
+          PIP_NO_CACHE_DIR: "off"
+          POETRY_CACHE_DIR: "${{ runner.temp }}/poetry-cache"
         run: |
           source .venv/bin/activate
           poe hooks-run
