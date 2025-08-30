@@ -64,24 +64,6 @@ jobs:
           source .venv/bin/activate
           poe hooks-run
 
-  ai-review:
-    name: "AI Code Review"
-    needs: [test]
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request'}}
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: AI Code Review
-        uses: freeedcom/ai-codereviewer@v2.7.0
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_API_MODEL: "gpt-4o"
-          exclude: "**/*.json, **/*.md, **/*.lock"
-
   dependabot:
     name: "Dependabot"
     needs: [test]
