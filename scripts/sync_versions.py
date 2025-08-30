@@ -59,22 +59,11 @@ def update_pyproject_toml(
     """Update pyproject.toml with new dependency versions for all groups."""
     content = file_path.read_text()
 
-    # Update main dependencies
-    if "dependencies" in new_groups:
-        for package, version in new_groups["dependencies"].items():
-            pattern = rf"({re.escape(package)}\s*=\s*).*"
-            replacement = rf"\g<1>{version}"
-            content = re.sub(pattern, replacement, content)
-
-    # Update group dependencies
-    for group_name, packages in new_groups.items():
-        if group_name == "dependencies":
-            continue  # Already handled above
-
+    # Replace versions for all packages across all groups
+    for packages in new_groups.values():
         for package, version in packages.items():
-            pattern = rf"({re.escape(package)}\s*=\s*).*"
-            replacement = rf"\g<1>{version}"
-            content = re.sub(pattern, replacement, content)
+            pattern = rf"(^\s*{re.escape(package)}\s*=\s*).*"
+            content = re.sub(pattern, rf"\1{version}", content, flags=re.MULTILINE)
 
     file_path.write_text(content)
 
