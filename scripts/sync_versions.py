@@ -89,7 +89,7 @@ def sync_lockfile(source_lockfile: Path, target_lockfile: Path) -> None:
 
 
 def main():
-    """Main function to sync versions."""
+    """Sync versions."""
     root_dir = Path(__file__).parent.parent
     example_package_dir = root_dir / "example-package"
     template_dir = root_dir / "{{ cookiecutter.project_slug }}"

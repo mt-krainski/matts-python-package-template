@@ -39,7 +39,7 @@ def update_precommit_config(file_path: Path, new_versions: Dict[str, str]) -> No
 
 
 def main():
-    """Main function to sync pre-commit config versions."""
+    """Sync pre-commit config versions."""
     root_dir = Path(__file__).parent.parent
     example_package_dir = root_dir / "example-package"
     template_dir = root_dir / "{{ cookiecutter.project_slug }}"
