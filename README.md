@@ -14,3 +14,24 @@ Here's what you get:
   1. Create a "Ruleset" for the main branch. "Require status checks to pass", with at least the "test" step.
   2. "Allow auto-merge" under "General" settings.
 - ChatGPT-based code reviews with `freeedcom/ai-codereviewer` (TODO: replace with my own fork that allows for more configuration)
+- Automatic version synchronization from `example-package/` to template files after Dependabot updates
+
+## Version Synchronization
+
+This template includes an automated system that keeps package versions in sync between the `example-package/` directory and the template files. Here's how it works:
+
+1. **Dependabot** runs weekly to update dependencies in `example-package/`
+2. **Auto-merge** happens when tests pass (if configured)
+3. **Sync workflow** automatically runs after Dependabot PRs are merged
+4. **Version sync script** (`scripts/sync_versions.py`) updates:
+   - `{{ cookiecutter.project_slug }}/pyproject.toml`
+   - Root `pyproject.toml`
+   - Only version numbers are updated, package names remain unchanged
+
+### Manual Sync
+
+You can manually sync versions at any time:
+
+```bash
+poe sync-versions
+```

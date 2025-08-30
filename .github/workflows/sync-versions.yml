@@ -1,0 +1,76 @@
+name: Sync Versions in Dependabot PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  sync-versions:
+    name: "Sync Package Versions"
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run version sync script
+        run: |
+          python scripts/sync_versions.py
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "Files changed:"
+            git status --porcelain
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+
+      - name: Commit and push changes to PR
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "chore: sync package versions from example-package"
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Create sync summary comment
+        if: steps.check-changes.outputs.changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const syncComment = comments.find(comment =>
+              comment.body.includes('Package versions synced')
+            );
+
+            if (!syncComment) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `✅ **Package versions synced**\n\nPackage versions have been automatically synced from \`example-package/\` to the template files as part of this Dependabot update.\n\nThis ensures the template stays up-to-date with the latest dependency versions.`
+              });
+            }

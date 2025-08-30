@@ -21,15 +21,11 @@ repos:
     rev: 25.1.0
     hooks:
       - id: black
-      {%- if cookiecutter.use_jupyter == 'y' %}
       - id: black-jupyter
-      {%- endif %}
-  {%- if cookiecutter.use_jupyter == 'y' %}
   - repo: https://github.com/srstevenson/nb-clean
     rev: 4.0.1
     hooks:
       - id: nb-clean
-  {%- endif %}
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
     hooks:
