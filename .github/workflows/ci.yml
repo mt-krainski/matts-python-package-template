@@ -13,35 +13,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
+
       - uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
           version: ${{ vars.POETRY_VERSION }}
+
       - run: pipx install poethepoet
+
       - run: pipx install cookiecutter
+
       - uses: actions/cache@v3
         id: cached-poetry-dependencies
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('./poetry.lock') }}
+
       - if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
+
       - run: |
-          poetry install --no-interaction
           poe configure
+
       - run: |
           source .venv/bin/activate
           poe test-full
+
       - run: |
           source .venv/bin/activate
           poe lint
+
       - run: |
           source .venv/bin/activate
           poe hooks-run
+
       - name: Regenerate example package and verify clean
         run: |
           set -euo pipefail
