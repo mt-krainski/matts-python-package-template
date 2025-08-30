@@ -15,11 +15,13 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -27,9 +29,11 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
           version: ${{ vars.POETRY_VERSION }}
+
       - name: Install Poe
         run: |
           pipx install poethepoet
+
       - name: Install Cookiecutter
         run: |
           pipx install cookiecutter
@@ -39,25 +43,29 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('./poetry.lock') }}
+
       - name: Install dependencies
         working-directory: .
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
+
       - name: Install project
         working-directory: .
         run: |
-          poetry install --no-interaction
           poe configure
+
       - name: Run tests
         working-directory: .
         run: |
           source .venv/bin/activate
           poe test-full
+
       - name: Run lint
         working-directory: .
         run: |
           source .venv/bin/activate
           poe lint
+
       - name: Run hooks
         working-directory: .
         run: |

@@ -4,7 +4,7 @@
 # It installs all relevant plugins, additional packages
 # and creates a template .env file.
 
-poetry install --no-root
+poetry install --no-interaction --no-root
 
 poetry -q self add poetry-plugin-dotenv
 poetry run pre-commit install
