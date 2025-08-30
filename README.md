@@ -13,4 +13,23 @@ Here's what you get:
 - basic Dependabot configuration, including auto-approving PRs if tests pass. This requires a few changes to Github repository Settings:
   1. Create a "Ruleset" for the main branch. "Require status checks to pass", with at least the "test" step.
   2. "Allow auto-merge" under "General" settings.
-- ChatGPT-based code reviews with `freeedcom/ai-codereviewer` (TODO: replace with my own fork that allows for more configuration)
+- Automatic version synchronization from `example-package/` to template files after Dependabot updates
+
+## Version Synchronization
+
+This template includes an automated system that keeps package versions in sync between the `example-package/` directory and the template files. Here's how it works:
+
+1. **Dependabot** creates PRs to update dependencies in `example-package/`
+2. **Sync workflow** automatically runs on Dependabot PRs (when opened, synchronized, or reopened)
+3. **Version sync script** (`poe sync-versions`) updates the dependencies in the template package
+4. **Changes are committed** directly to the Dependabot PR with a summary comment
+
+### Manual Sync
+
+You can manually sync versions at any time:
+
+```bash
+poe sync-versions
+```
+
+This will sync versions from `example-package/` to the template directory and update the lockfile.

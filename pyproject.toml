@@ -20,7 +20,6 @@ flake8-builtins = "^3.0.0"
 flake8-comprehensions = "^3.16.0"
 flake8-docstrings = "^1.7.0"
 flake8-eradicate = "^1.5.0"
-flake8-isort = "^6.1.2"
 flake8-spellcheck = "^0.28.0"
 pep8-naming = "^0.15.1"
 flake8-pyproject = "^1.2.3"
@@ -29,6 +28,7 @@ flake8-black = "^0.3.6"
 isort = "^6.0.1"
 coverage = "^7.10.5"
 pre-commit = "^4.3.0"
+flake8-isort = "^6.1.2"
 
 [build-system]
 requires = ["poetry-core"]
@@ -58,10 +58,12 @@ envfile = ".env"
 [tool.poe.tasks]
 configure = "./scripts/configure.sh"
 update = "./scripts/update.sh"
+sync-versions = "python scripts/sync_versions.py"
+sync-precommit = "python scripts/sync_precommit.py"
 lint = "flake8 tests scripts"
 test = 'coverage run -m pytest --showlocals tests'
 hooks-run = "pre-commit run --all-files"
-hooks-update = "pre-commit auto-update"
+hooks-update = "pre-commit autoupdate"
 
 [tool.poe.tasks.test-full]
 sequence = [

@@ -64,23 +64,18 @@ jobs:
           source .venv/bin/activate
           poe hooks-run
 
-  ai-review:
-    name: "AI Code Review"
-    needs: [test]
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request'}}
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: AI Code Review
-        uses: freeedcom/ai-codereviewer@v2.7.0
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_API_MODEL: "gpt-4o"
-          exclude: "**/*.json, **/*.md, **/*.lock"
+      - name: Regenerate example package and verify clean
+        working-directory: .
+        run: |
+          set -euo pipefail
+          rm -rf example-package
+          cookiecutter . --no-input --overwrite-if-exists project_name="Example Package" -o .
+          if git status --porcelain | sed '/example-package\/README.md/d' | grep -q .; then
+            echo "Unexpected changes after regenerating template (excluding example-package/README.md):"
+            git status --porcelain
+            git --no-pager diff --stat
+            exit 1
+          fi
 
   dependabot:
     name: "Dependabot"

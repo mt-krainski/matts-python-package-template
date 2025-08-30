@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "{{ cookiecutter.project_slug }}"
+name = "example-package"
 version = "0.0.1"
-description = "{{ cookiecutter.project_name }}"
-authors = ["{{ cookiecutter.author }} <{{ cookiecutter.email }}>"]
+description = "Example Package"
+authors = ["Matt Krainski <mateusz@krainski.eu>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

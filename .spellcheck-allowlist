@@ -1,1 +1,11 @@
 cookiecutter
+copy2
+deps
+dotall
+finditer
+lockfile
+multiline
+precommit
+pyproject
+repo
+toml
