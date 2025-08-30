@@ -1,0 +1,90 @@
+name: CI (after Dependabot sync)
+
+on:
+  workflow_run:
+    workflows: ["Sync Versions in Dependabot PR"]
+    types: [completed]
+
+jobs:
+  test:
+    # run only if the sync succeeded, for Dependabot PRs into main
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.actor == 'dependabot[bot]' &&
+      github.event.workflow_run.pull_requests[0].base.ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      # avoid dupe runs if the sync pushes multiple times
+      group: dependabot-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out the synced commit
+        uses: actions/checkout@v4
+        with:
+          # this is the commit produced by your sync job's push
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+          version: ${{ vars.POETRY_VERSION }}
+
+      - name: Install Poe
+        run: pipx install poethepoet
+
+      - name: Install Cookiecutter
+        run: pipx install cookiecutter
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('./poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: |
+          poetry install --no-interaction
+          poe configure
+
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          poe test-full
+
+      - name: Run lint
+        run: |
+          source .venv/bin/activate
+          poe lint
+
+      - name: Run hooks
+        run: |
+          source .venv/bin/activate
+          poe hooks-run
+
+      - name: Regenerate example package and verify clean
+        run: |
+          set -euo pipefail
+          rm -rf example-package
+          cookiecutter . --no-input --overwrite-if-exists project_name="Example Package" -o .
+          if git status --porcelain | sed '/example-package\/README.md/d' | grep -q .; then
+            echo "Unexpected changes after regenerating template (excluding example-package/README.md):"
+            git status --porcelain
+            git --no-pager diff --stat
+            exit 1
+          fi

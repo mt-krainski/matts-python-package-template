@@ -1,79 +1,48 @@
+# .github/workflows/ci.yml
 name: CI
-
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   test:
+    # don't run this path for Dependabot PRs
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
           version: ${{ vars.POETRY_VERSION }}
-
-      - name: Install Poe
-        run: |
-          pipx install poethepoet
-
-      - name: Install Cookiecutter
-        run: |
-          pipx install cookiecutter
-      - name: Load cached venv
+      - run: pipx install poethepoet
+      - run: pipx install cookiecutter
+      - uses: actions/cache@v3
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('./poetry.lock') }}
-
-      - name: Install dependencies
-        working-directory: .
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      - if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
-
-      - name: Install project
-        working-directory: .
-        run: |
+      - run: |
+          poetry install --no-interaction
           poe configure
-
-      - name: Run tests
-        working-directory: .
-        run: |
+      - run: |
           source .venv/bin/activate
           poe test-full
-
-      - name: Run lint
-        working-directory: .
-        run: |
+      - run: |
           source .venv/bin/activate
           poe lint
-
-      - name: Run hooks
-        working-directory: .
-        run: |
+      - run: |
           source .venv/bin/activate
           poe hooks-run
-
       - name: Regenerate example package and verify clean
-        working-directory: .
         run: |
           set -euo pipefail
           rm -rf example-package
@@ -84,22 +53,3 @@ jobs:
             git --no-pager diff --stat
             exit 1
           fi
-
-  dependabot:
-    name: "Dependabot"
-    needs: [test]
-    runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}}
-    permissions:
-      contents: write
-    steps:
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v2
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - name: Enable auto-merge for Dependabot PRs
-        run: gh pr merge --auto --merge "$PR_URL"
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
