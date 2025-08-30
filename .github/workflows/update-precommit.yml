@@ -36,16 +36,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --no-interaction
+          poetry install --no-interaction --no-root
 
-      - name: Update pre-commit hooks in example-package
+      - name: Install dependencies in example-package
         working-directory: example-package
         run: |
           poetry install --no-interaction
-          poetry run poe hooks-update
 
-      - name: Run pre-commit sync script
+      - name: Update pre-commit hooks and sync with example-package
         run: |
+          poe hooks-update
           poe sync-precommit
 
       - name: Check for changes

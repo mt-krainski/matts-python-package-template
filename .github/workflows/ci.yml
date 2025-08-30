@@ -52,7 +52,6 @@ jobs:
       - name: Install project
         working-directory: .
         run: |
-          poetry install --no-interaction
           poe configure
 
       - name: Run tests
