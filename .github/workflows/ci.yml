@@ -7,10 +7,40 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
+  test-open-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: "CI test: create branch, add file, and open PR"
+        env:
+          BASE_REF: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          BRANCH="ci-test/${BASE_REF}-${RUN_ID}-${RUN_ATTEMPT}"
+          FILE="ci-test-${RUN_ID}.txt"
+          git checkout -b "$BRANCH"
+          echo "This is a CI test at run $RUN_ID attempt $RUN_ATTEMPT" > "$FILE"
+          git add "$FILE"
+          git commit -m "CI test: add $FILE"
+          git push -u origin "$BRANCH"
+          gh pr create --title "CI test PR: $FILE" --body "Automated CI test PR created by CI." --base "$BASE_REF" --head "$BRANCH"
+
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Check out repository
@@ -89,7 +119,7 @@ jobs:
     name: "Dependabot"
     needs: [test]
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}}
+    if: ${{ (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') || (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.actor.login == 'dependabot[bot]') }}
     permissions:
       contents: write
     steps:
@@ -98,6 +128,7 @@ jobs:
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
         env:
