@@ -22,6 +22,7 @@ jobs:
       - name: Comment @dependabot recreate on conflicted PRs
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.DEPENDABOT_PAT }}
           script: |
             const prs = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
