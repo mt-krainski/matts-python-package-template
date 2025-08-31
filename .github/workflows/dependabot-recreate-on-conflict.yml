@@ -1,0 +1,52 @@
+## Purpose: When sync-versions modifies Dependabot PR branches, Dependabot stops
+## auto-rebasing. After merges to main, this nudges conflicted PRs to be
+## recreated by commenting "@dependabot recreate".
+name: Nudge Dependabot to recreate on conflicts
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  dependabot-recreate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for mergeability calculation
+        run: sleep 60
+
+      - name: Comment @dependabot recreate on conflicted PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prs = await github.paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              base: 'main',
+              per_page: 100
+            });
+
+            const dependabotPRs = prs.filter(pr => pr.user && pr.user.login === 'dependabot[bot]');
+
+            for (const pr of dependabotPRs) {
+              const { data: prData } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+
+              // Don't try to recreate PRs that already can be merged.
+              if (prData.mergeable_state !== 'dirty') continue;
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: '@dependabot recreate'
+              });
+            }
