@@ -16,20 +16,33 @@ jobs:
   dependabot-recreate:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for mergeability calculation
-        run: sleep 60
-
       - name: Comment @dependabot recreate on conflicted PRs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.DEPENDABOT_PAT }}
           script: |
-            // Identify actor for clarity
             try {
               const { data: me } = await github.rest.users.getAuthenticated();
               console.log(`Authenticated as: ${me.login}`);
             } catch (e) {
               console.log('Could not determine authenticated user:', e.message || e);
+            }
+
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+            // wait for mergeable_state to be computed, polling every 60 seconds up to 10 minutes
+            async function waitForMergeableState(owner, repo, number, maxMs = 600000, delay = 60000) {
+              let waitedMs = 0;
+              let state = 'unknown';
+              while (waitedMs < maxMs) {
+                const { data } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+                state = data.mergeable_state || 'unknown';
+                console.log(`PR #${number}: mergeable_state=${state} (waited ${waitedMs}ms)`);
+                if (state !== 'unknown') return state;
+                await sleep(delay);
+                waitedMs += delay;
+              }
+              return state;
             }
 
             console.log('Listing open PRs to base=main...');
@@ -47,15 +60,10 @@ jobs:
 
             for (const pr of dependabotPRs) {
               console.log(`\nInspecting PR #${pr.number}: ${pr.title}`);
-              const { data: prData } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number
-              });
-
-              console.log(`mergeable_state for #${pr.number}: ${prData.mergeable_state}`);
+              const state = await waitForMergeableState(context.repo.owner, context.repo.repo, pr.number);
+              console.log(`Final mergeable_state for #${pr.number}: ${state}`);
               // Don't try to recreate PRs that already can be merged.
-              if (prData.mergeable_state !== 'dirty') {
+              if (state !== 'dirty') {
                 console.log(`Skipping PR #${pr.number}: not in conflict (mergeable_state != 'dirty').`);
                 continue;
               }
