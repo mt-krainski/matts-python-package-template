@@ -7,15 +7,36 @@ on:
   pull_request:
     branches:
       - main
-  workflow_run:
-    workflows:
-      - Sync Versions in Dependabot PR
-    types:
-      - completed
-
 jobs:
+  test-open-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: "CI test: create branch, add file, and open PR"
+        env:
+          BASE_REF: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          BRANCH="ci-test/${BASE_REF}-${RUN_ID}-${RUN_ATTEMPT}"
+          FILE="ci-test-${RUN_ID}.txt"
+          git checkout -b "$BRANCH"
+          echo "This is a CI test at run $RUN_ID attempt $RUN_ATTEMPT" > "$FILE"
+          git add "$FILE"
+          git commit -m "CI test: add $FILE"
+          git push -u origin "$BRANCH"
+          gh pr create --title "CI test PR: $FILE" --body "Automated CI test PR created by CI." --base "$BASE_REF" --head "$BRANCH"
+
   test:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -24,9 +45,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-          fetch-depth: 0
 
       - name: Set up python
         id: setup-python
@@ -96,25 +114,6 @@ jobs:
             git --no-pager diff --stat
             exit 1
           fi
-      - name: "CI test: create branch, add file, and open PR"
-        if: ${{ github.event_name == 'push' }}
-        env:
-          BASE_REF: ${{ github.ref_name }}
-          RUN_ID: ${{ github.run_id }}
-          RUN_ATTEMPT: ${{ github.run_attempt }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          BRANCH="ci-test/${BASE_REF}-${RUN_ID}-${RUN_ATTEMPT}"
-          FILE="ci-test-${RUN_ID}.txt"
-          git checkout -b "$BRANCH"
-          echo "This is a CI test at run $RUN_ID attempt $RUN_ATTEMPT" > "$FILE"
-          git add "$FILE"
-          git commit -m "CI test: add $FILE"
-          git push -u origin "$BRANCH"
-          gh pr create --title "CI test PR: $FILE" --body "Automated CI test PR created by CI." --base "$BASE_REF" --head "$BRANCH"
 
   dependabot:
     name: "Dependabot"
