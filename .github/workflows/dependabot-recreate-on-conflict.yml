@@ -24,6 +24,15 @@ jobs:
         with:
           github-token: ${{ secrets.DEPENDABOT_PAT }}
           script: |
+            // Identify actor for clarity
+            try {
+              const { data: me } = await github.rest.users.getAuthenticated();
+              console.log(`Authenticated as: ${me.login}`);
+            } catch (e) {
+              console.log('Could not determine authenticated user:', e.message || e);
+            }
+
+            console.log('Listing open PRs to base=main...');
             const prs = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -32,22 +41,36 @@ jobs:
               per_page: 100
             });
 
+            console.log(`Found ${prs.length} open PR(s) to main.`);
             const dependabotPRs = prs.filter(pr => pr.user && pr.user.login === 'dependabot[bot]');
+            console.log(`Filtered to ${dependabotPRs.length} Dependabot PR(s).`);
 
             for (const pr of dependabotPRs) {
+              console.log(`\nInspecting PR #${pr.number}: ${pr.title}`);
               const { data: prData } = await github.rest.pulls.get({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: pr.number
               });
 
+              console.log(`mergeable_state for #${pr.number}: ${prData.mergeable_state}`);
               // Don't try to recreate PRs that already can be merged.
-              if (prData.mergeable_state !== 'dirty') continue;
+              if (prData.mergeable_state !== 'dirty') {
+                console.log(`Skipping PR #${pr.number}: not in conflict (mergeable_state != 'dirty').`);
+                continue;
+              }
 
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                body: '@dependabot recreate'
-              });
+              try {
+                const { data: comment } = await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: '@dependabot recreate'
+                });
+                console.log(`Commented on PR #${pr.number} successfully. comment_id=${comment.id}${comment.html_url ? ` url=${comment.html_url}` : ''}`);
+              } catch (error) {
+                const status = error.status || (error.response && error.response.status);
+                const msg = (error.response && error.response.data && error.response.data.message) || error.message || String(error);
+                console.log(`Failed to comment on PR #${pr.number}. status=${status} message=${msg}`);
+              }
             }
