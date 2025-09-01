@@ -11,8 +11,7 @@ jobs:
     name: "Update Pre-commit Hooks"
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -43,9 +42,19 @@ jobs:
         run: |
           poetry install --no-interaction
 
-      - name: Update pre-commit hooks and sync with example-package
+      - name: Update pre-commit hooks in repo root
+        working-directory: .
         run: |
           poe hooks-update
+
+      - name: Update pre-commit hooks in example-package
+        working-directory: example-package
+        run: |
+          poe hooks-update
+
+      - name: Sync pre-commit config with example-package
+        working-directory: .
+        run: |
           poe sync-precommit
 
       - name: Check for changes
@@ -64,13 +73,14 @@ jobs:
         if: steps.check-changes.outputs.changes == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPO_PAT }}
           commit-message: "chore: update pre-commit hooks"
           title: "chore: update pre-commit hooks"
           body: |
             This PR was automatically created by the monthly pre-commit hook update workflow.
 
             Changes include:
+            - Updated pre-commit hooks in repo root
             - Updated pre-commit hooks in `example-package/`
             - Synced updated hook versions to template files
 
