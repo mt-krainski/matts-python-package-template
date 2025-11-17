@@ -10,7 +10,7 @@ python = "^3.12"
 
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^9.0.0"
+pytest = "^9.0.1"
 darglint = "^1.8.1"
 flake8 = "^7.1.1"
 flake8-bandit = "^4.1.1"
