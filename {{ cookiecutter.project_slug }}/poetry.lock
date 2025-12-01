@@ -441,20 +441,20 @@ test = ["pytest"]
 
 [[package]]
 name = "flake8-pyproject"
-version = "1.2.3"
+version = "1.2.4"
 description = "Flake8 plug-in loading the configuration from pyproject.toml"
 optional = false
-python-versions = ">= 3.6"
+python-versions = ">=3.6"
 groups = ["dev"]
 files = [
-    {file = "flake8_pyproject-1.2.3-py3-none-any.whl", hash = "sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a"},
+    {file = "flake8_pyproject-1.2.4-py3-none-any.whl", hash = "sha256:ea34c057f9a9329c76d98723bb2bb498cc6ba8ff9872c4d19932d48c91249a77"},
 ]
 
 [package.dependencies]
 Flake8 = ">=5"
 
 [package.extras]
-dev = ["pyTest", "pyTest-cov"]
+dev = ["Flit (>=3.4)", "pyTest (>=7)", "pyTest-cov (>=7) ; python_version >= \"3.10\""]
 
 [[package]]
 name = "flake8-spellcheck"
@@ -886,4 +886,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "2cf9f560acff5ab16c9c55fd6347c30d2240192c4bb13b032b17efe5445917a5"
+content-hash = "280cb647658593eedd8907517b662222fd2dbf690518f80a1e919c9f636e4fbf"
