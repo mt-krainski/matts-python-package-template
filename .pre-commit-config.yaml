@@ -23,7 +23,9 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
+        exclude: "{{ cookiecutter.project_slug }}"
       - id: ruff-format
+        exclude: "{{ cookiecutter.project_slug }}"
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
