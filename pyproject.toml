@@ -47,8 +47,10 @@ builtins-ignorelist = ["id"]
 convention = "google"
 
 [tool.poe]
-executor = "uv"
 envfile = ".env"
+
+[tool.poe.executor]
+type = "uv"
 
 [tool.poe.tasks]
 configure = "./scripts/configure.sh"

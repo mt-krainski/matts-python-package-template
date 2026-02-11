@@ -54,8 +54,9 @@ def update_pyproject_toml(
 
     for packages in source_groups.values():
         for name, full_spec in packages.items():
-            # Match the dependency string in quotes, e.g. "pytest>=9.0.2"
-            pattern = rf'"{re.escape(name)}[^"]*"'
+            # Match only PEP 508 dependency strings with version operators,
+            # e.g. "pytest>=9.0.2", not "pytest --showlocals"
+            pattern = rf'"{re.escape(name)}(\[[^\]]*\])?\s*(>=|<=|==|~=|!=|>|<)[^"]*"'
             replacement = f'"{full_spec}"'
             content = re.sub(pattern, replacement, content)
 
