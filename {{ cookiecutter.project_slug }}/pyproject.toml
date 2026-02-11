@@ -1,68 +1,70 @@
-[tool.poetry]
+[project]
 name = "{{ cookiecutter.project_slug }}"
 version = "0.0.1"
 description = "{{ cookiecutter.project_name }}"
-authors = ["{{ cookiecutter.author }} <{{ cookiecutter.email }}>"]
+authors = [{name = "{{ cookiecutter.author }}", email = "{{ cookiecutter.email }}"}]
 readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
 
-[tool.poetry.dependencies]
-python = "^3.12"
-
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^9.0.2"
-darglint = "^1.8.1"
-flake8 = "^7.3.0"
-flake8-bandit = "^4.1.1"
-flake8-bugbear = "^25.11.29"
-flake8-builtins = "^3.1.0"
-flake8-comprehensions = "^3.17.0"
-flake8-docstrings = "^1.7.0"
-flake8-eradicate = "^1.5.0"
-flake8-isort = "^7.0.0"
-flake8-spellcheck = "^0.28.0"
-pep8-naming = "^0.15.1"
-flake8-pyproject = "^1.2.4"
-black = "^26.1.0"
-flake8-black = "^0.4.0"
-isort = "^7.0.0"
-coverage = "^7.13.4"
-pre-commit = "^4.5.1"
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "ruff>=0.15.0",
+    "coverage>=7.13.4",
+    "pre-commit>=4.5.1",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.flake8]
-max-line-length = 88
-dictionaries = ["en_US", "python", "technical"]
-builtins-ignorelist = ["id"]
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "D",    # pydocstyle (flake8-docstrings)
+    "ERA",  # eradicate
+    "S",    # flake8-bandit
+]
 ignore = ["D104", "D100", "D101", "D106"]
-per-file-ignores = """
-    tests/**: S101
-"""
-whitelist = ".spellcheck-allowlist"
-strictness = "long"
 
-[tool.isort]
-include_trailing_comma = true
-force_grid_wrap = 0
-line_length = 88
-profile = "black"
-known_first_party = []
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["id"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.poe]
+executor = "uv"
 envfile = ".env"
 
 [tool.poe.tasks]
 configure = "./scripts/configure.sh"
 update = "./scripts/update.sh"
-lint = "flake8 ."
-test = 'coverage run -m pytest --showlocals'
-hooks-run = "pre-commit run --all-files"
-hooks-update = "pre-commit autoupdate"
+hooks-run = "pre-commit>=4.5.1"
+hooks-update = "pre-commit>=4.5.1"
+test = "coverage>=7.13.4"
+
+[tool.poe.tasks.lint]
+sequence = [
+    { cmd = "ruff>=0.15.0" },
+    { cmd = "ruff>=0.15.0" },
+]
 
 [tool.poe.tasks.test-full]
 sequence = [
-  { ref = "test" }
+    { ref = "test" },
 ]

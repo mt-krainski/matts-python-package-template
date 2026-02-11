@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-poetry install
-poetry run pre-commit autoupdate
+uv sync
+uv run pre-commit autoupdate

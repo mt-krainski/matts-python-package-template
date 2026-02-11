@@ -4,66 +4,60 @@
 import re
 import shutil
 import sys
+import tomllib
 from pathlib import Path
 from typing import Dict
 
 
-def parse_pyproject_toml(file_path: Path) -> Dict[str, Dict[str, str]]:
-    """Parse pyproject.toml and extract all dependency groups with versions."""
-    content = file_path.read_text()
+def parse_dependency_name(dep_string: str) -> str | None:
+    """Extract package name from a PEP 508 dependency string."""
+    match = re.match(r"^([a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?)", dep_string)
+    if match:
+        return match.group(1)
+    return None
 
-    # Find all dependency groups
-    groups = {}
 
-    # Main dependencies (not in a group)
-    main_deps_pattern = r"\[tool\.poetry\.dependencies\]\n(.*?)(?=\n\[|\n$)"
-    main_match = re.search(main_deps_pattern, content, re.DOTALL)
+def parse_dependencies(pyproject_path: Path) -> Dict[str, Dict[str, str]]:
+    """Parse all dependencies from a pyproject.toml file.
 
-    if main_match:
-        main_content = main_match.group(1)
-        main_deps = {}
-        for line in main_content.strip().split("\n"):
-            line = line.strip()
-            if line and "=" in line and not line.startswith("python"):
-                package, version = line.split("=", 1)
-                main_deps[package.strip()] = version.strip()
-        if main_deps:
-            groups["dependencies"] = main_deps
+    Returns a dict of {group_name: {package_name: full_dep_string}}.
+    """
+    with open(pyproject_path, "rb") as f:
+        data = tomllib.load(f)
 
-    # Find all group dependencies
-    group_pattern = (
-        r"\[tool\.poetry\.group\.([^\]]+)\.dependencies\]\n(.*?)(?=\n\[|\n$)"
-    )
-    group_matches = re.finditer(group_pattern, content, re.DOTALL)
+    groups: Dict[str, Dict[str, str]] = {}
 
-    for match in group_matches:
-        group_name = match.group(1)
-        group_content = match.group(2)
-        group_deps = {}
+    # Parse project dependencies
+    project_deps = data.get("project", {}).get("dependencies", [])
+    for dep in project_deps:
+        name = parse_dependency_name(dep)
+        if name:
+            groups.setdefault("dependencies", {})[name] = dep
 
-        for line in group_content.strip().split("\n"):
-            line = line.strip()
-            if line and "=" in line:
-                package, version = line.split("=", 1)
-                group_deps[package.strip()] = version.strip()
-
-        if group_deps:
-            groups[group_name] = group_deps
+    # Parse dependency groups
+    dep_groups = data.get("dependency-groups", {})
+    for group_name, group_deps in dep_groups.items():
+        for dep in group_deps:
+            if isinstance(dep, str):
+                name = parse_dependency_name(dep)
+                if name:
+                    groups.setdefault(group_name, {})[name] = dep
 
     return groups
 
 
 def update_pyproject_toml(
-    file_path: Path, new_groups: Dict[str, Dict[str, str]]
+    file_path: Path, source_groups: Dict[str, Dict[str, str]]
 ) -> None:
-    """Update pyproject.toml with new dependency versions for all groups."""
+    """Update dependency versions in a pyproject.toml file."""
     content = file_path.read_text()
 
-    # Replace versions for all packages across all groups
-    for packages in new_groups.values():
-        for package, version in packages.items():
-            pattern = rf"(^\s*{re.escape(package)}\s*=\s*).*"
-            content = re.sub(pattern, rf"\1{version}", content, flags=re.MULTILINE)
+    for packages in source_groups.values():
+        for name, full_spec in packages.items():
+            # Match the dependency string in quotes, e.g. "pytest>=9.0.2"
+            pattern = rf'"{re.escape(name)}[^"]*"'
+            replacement = f'"{full_spec}"'
+            content = re.sub(pattern, replacement, content)
 
     file_path.write_text(content)
 
@@ -94,7 +88,6 @@ def main():
 
     example_pyproject = example_package_dir / "pyproject.toml"
     template_pyproject = template_dir / "pyproject.toml"
-    example_lockfile = example_package_dir / "poetry.lock"
 
     if not example_pyproject.exists():
         print(f"Error: {example_pyproject} does not exist")
@@ -105,7 +98,7 @@ def main():
         sys.exit(1)
 
     print("Parsing example-package pyproject.toml...")
-    example_groups = parse_pyproject_toml(example_pyproject)
+    example_groups = parse_dependencies(example_pyproject)
 
     total_packages = sum(len(packages) for packages in example_groups.values())
     print(
@@ -117,10 +110,10 @@ def main():
     update_pyproject_toml(template_pyproject, example_groups)
 
     print("Syncing lockfiles...")
-    # Sync template lockfile
-    example_lockfile = example_package_dir / "poetry.lock"
-    template_lockfile = template_dir / "poetry.lock"
-    sync_lockfile(example_lockfile, template_lockfile)
+    sync_lockfile(
+        example_package_dir / "uv.lock",
+        template_dir / "uv.lock",
+    )
 
     print("Version sync completed successfully!")
 
@@ -128,8 +121,8 @@ def main():
     for group_name, packages in example_groups.items():
         if packages:
             print(f"\n{group_name.title()} updated:")
-            for package, version in packages.items():
-                print(f"  {package}: {version}")
+            for name, spec in packages.items():
+                print(f"  {name}: {spec}")
 
 
 if __name__ == "__main__":

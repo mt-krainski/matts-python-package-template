@@ -21,41 +21,32 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
-          version: ${{ vars.POETRY_VERSION }}
+          enable-cache: true
 
       - name: Install Poe
-        run: |
-          pipx install poethepoet
+        run: pipx install poethepoet
 
       - name: Install dependencies
-        run: |
-          poetry install --no-interaction --no-root
+        run: uv sync
 
       - name: Install dependencies in example-package
         working-directory: example-package
-        run: |
-          poetry install --no-interaction
+        run: uv sync
 
       - name: Update pre-commit hooks in repo root
         working-directory: .
-        run: |
-          poe hooks-update
+        run: poe hooks-update
 
       - name: Update pre-commit hooks in example-package
         working-directory: example-package
-        run: |
-          poe hooks-update
+        run: poe hooks-update
 
       - name: Sync pre-commit config with example-package
         working-directory: .
-        run: |
-          poe sync-precommit
+        run: poe sync-precommit
 
       - name: Check for changes
         id: check-changes
