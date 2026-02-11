@@ -2,7 +2,7 @@
 name = "example-package"
 version = "0.0.1"
 description = "Example Package"
-authors = ["Matt Krainski <mateusz@krainski.eu>"]
+authors = ["Matt Krainski <mt.krainski@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
