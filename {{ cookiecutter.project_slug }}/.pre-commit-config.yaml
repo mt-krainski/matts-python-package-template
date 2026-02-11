@@ -18,7 +18,7 @@ repos:
           - "--indent=2"
           - "--no-sort-keys"
   - repo: https://github.com/psf/black
-    rev: 25.9.0
+    rev: 26.1.0
     hooks:
       - id: black
       {%- if cookiecutter.use_jupyter == 'y' %}
@@ -31,10 +31,10 @@ repos:
       - id: nb-clean
   {%- endif %}
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    rev: v8.30.0
     hooks:
       - id: gitleaks
   - repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
+    rev: 7.0.0
     hooks:
       - id: isort
