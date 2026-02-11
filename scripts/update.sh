@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 uv sync
-uv run pre-commit autoupdate
+pre-commit autoupdate

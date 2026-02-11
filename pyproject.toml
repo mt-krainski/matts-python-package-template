@@ -14,7 +14,6 @@ dev = [
     "pytest>=9.0.2",
     "ruff>=0.15.0",
     "coverage>=7.13.4",
-    "pre-commit>=4.5.1",
     "poethepoet>=0.32.0",
 ]
 
@@ -46,6 +45,10 @@ builtins-ignorelist = ["id"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.coverage.run]
+source = ["tests", "scripts"]
+omit = ["{{ cookiecutter.project_slug }}/**"]
+
 [tool.poe]
 envfile = ".env"
 
@@ -59,7 +62,11 @@ sync-versions = "python scripts/sync_versions.py"
 sync-precommit = "python scripts/sync_precommit.py"
 hooks-run = "pre-commit run --all-files"
 hooks-update = "pre-commit autoupdate"
-test = "coverage run -m pytest --showlocals tests"
+[tool.poe.tasks.test]
+sequence = [
+    { cmd = "coverage run -m pytest --showlocals tests" },
+    { cmd = "coverage report" },
+]
 
 [tool.poe.tasks.lint]
 sequence = [

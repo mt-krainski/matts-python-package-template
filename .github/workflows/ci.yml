@@ -33,8 +33,10 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install Poe
-        run: pipx install poethepoet
+      - name: Install tools
+        run: |
+          pipx install poethepoet
+          pipx install pre-commit
 
       - name: Install dependencies
         run: uv sync

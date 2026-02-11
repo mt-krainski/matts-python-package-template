@@ -1,19 +1,70 @@
 # Matt's Python Package Template
 
+[![CI](https://github.com/mt-krainski/matts-python-package-template/actions/workflows/ci.yml/badge.svg)](https://github.com/mt-krainski/matts-python-package-template/actions/workflows/ci.yml)
+
 I recently found myself creating a few packages and copying over the template, so I decided to create a cookie-cutter out of it.
 
 Here's what you get:
 
-- package management with [Poetry](https://python-poetry.org/)
+- package management with [uv](https://docs.astral.sh/uv/)
 - script management with [Poe the Poet](https://poethepoet.natn.io/index.html)
-- code formatting with [Black](https://black.readthedocs.io/en/stable) and [isort](https://pycqa.github.io/isort/)
-- pretty solid set of flake8 linters
+- linting and formatting with [Ruff](https://docs.astral.sh/ruff/)
 - a collection of [pre-commit](https://pre-commit.com/) hooks
-- GitHub CI that will install, test, and lint your package on every PR or push to main
-- basic Dependabot configuration, including auto-approving PRs if tests pass. This requires a few changes to Github repository Settings:
-  1. Create a "Ruleset" for the main branch. "Require status checks to pass", with at least the "test" step.
-  2. "Allow auto-merge" under "General" settings.
-- Automatic version synchronization from `example-package/` to template files after Dependabot updates
+- GitHub CI with tests, linting, and a template regeneration check
+- Dependabot with auto-merge and automatic version synchronization across template files
+
+## Prerequisites
+
+- [pyenv](https://github.com/pyenv/pyenv#installation) for Python version management
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) for package management
+- [Poe the Poet](https://poethepoet.natn.io/installation.html) for task running
+- [pre-commit](https://pre-commit.com/#install) for git hooks
+- [cookiecutter](https://cookiecutter.readthedocs.io/en/stable/installation.html) for generating packages from this template
+
+## Quick Start
+
+```bash
+cookiecutter gh:mt-krainski/matts-python-package-template
+cd <your-package>
+poe configure
+```
+
+Verify everything works:
+
+```bash
+poe lint
+poe test
+```
+
+## Available Tasks
+
+| Task               | Description                                                                      |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `poe configure`    | Set up the development environment (install deps, pre-commit hooks, `.env` file) |
+| `poe update`       | Update dependencies and pre-commit hooks                                         |
+| `poe lint`         | Run Ruff linting and format checks                                               |
+| `poe test`         | Run tests with coverage and display the coverage report                          |
+| `poe hooks-run`    | Run all pre-commit hooks against the repo                                        |
+| `poe hooks-update` | Update pre-commit hooks to latest versions                                       |
+
+This list may be incomplete. Check `poe` for a full list of available commands.
+
+## CI
+
+Every push or PR to `main` runs:
+
+1. Tests (`poe test-full`)
+2. Linting (`poe lint`)
+3. Pre-commit hooks (`poe hooks-run`)
+
+The template repo CI also regenerates `example-package/` from the template and verifies the result matches what's committed. This catches any drift between the template and its example output.
+
+## Repository Setup
+
+To enable Dependabot auto-merge on a generated package, you need two changes in your GitHub repository settings:
+
+1. Create a **Ruleset** for the `main` branch. Enable "Require status checks to pass" with at least the `test` check.
+2. Enable **"Allow auto-merge"** under General settings.
 
 ## Version Synchronization
 

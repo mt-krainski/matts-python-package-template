@@ -5,7 +5,7 @@
 
 uv sync
 
-uv run pre-commit install
+pre-commit install
 
 cat > .env <<EOL
 
