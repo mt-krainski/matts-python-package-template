@@ -17,13 +17,18 @@ repos:
           - "--autofix"
           - "--indent=2"
           - "--no-sort-keys"
-  - repo: https://github.com/psf/black
-    rev: 26.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
     hooks:
-      - id: black
-      {%- if cookiecutter.use_jupyter == 'y' %}
-      - id: black-jupyter
-      {%- endif %}
+      - id: ruff
+        args: [--fix]
+        {%- if cookiecutter.use_jupyter == 'y' %}
+        types_or: [python, pyfirst, jupyter]
+        {%- endif %}
+      - id: ruff-format
+        {%- if cookiecutter.use_jupyter == 'y' %}
+        types_or: [python, pyfirst, jupyter]
+        {%- endif %}
   {%- if cookiecutter.use_jupyter == 'y' %}
   - repo: https://github.com/srstevenson/nb-clean
     rev: 4.0.1
@@ -34,7 +39,3 @@ repos:
     rev: v8.30.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/PyCQA/isort
-    rev: 7.0.0
-    hooks:
-      - id: isort

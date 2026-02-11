@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-# This script prepares the development envrionment.
-# It installs all relevant plugins, additional packages
-# and creates a template .env file.
+# This script prepares the development environment.
+# It installs all relevant packages and creates a template .env file.
 
-poetry install --no-interaction --no-root
+uv sync
 
-poetry -q self add poetry-plugin-dotenv
-poetry run pre-commit install
+uv run pre-commit install
 
 cat > .env <<EOL
 

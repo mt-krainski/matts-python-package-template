@@ -18,15 +18,15 @@ repos:
           - "--autofix"
           - "--indent=2"
           - "--no-sort-keys"
-  - repo: https://github.com/psf/black
-    rev: 26.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
     hooks:
-      - id: black
+      - id: ruff
+        args: [--fix]
+        exclude: "{{ cookiecutter.project_slug }}"
+      - id: ruff-format
+        exclude: "{{ cookiecutter.project_slug }}"
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/PyCQA/isort
-    rev: 7.0.0
-    hooks:
-      - id: isort
