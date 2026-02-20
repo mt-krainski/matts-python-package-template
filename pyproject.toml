@@ -6,15 +6,14 @@ authors = [{name = "Matt Krainski", email = "mateusz@krainski.eu"}]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "cookiecutter>=2.6.0",
+    "cookiecutter>=2.6.0,<3.0.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.2",
-    "ruff>=0.15.0",
-    "coverage>=7.13.4",
-    "poethepoet>=0.32.0",
+    "coverage>=7.13.4,<8.0.0",
+    "pytest>=9.0.2,<10.0.0",
+    "ruff>=0.15.1,<0.16.0",
 ]
 
 [tool.ruff]
@@ -48,6 +47,10 @@ convention = "google"
 [tool.coverage.run]
 source = ["tests", "scripts"]
 omit = ["{{ cookiecutter.project_slug }}/**"]
+
+[tool.uv]
+add-bounds = "major"
+preview = true
 
 [tool.poe]
 envfile = ".env"

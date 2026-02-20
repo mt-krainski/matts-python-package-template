@@ -10,9 +10,6 @@ repos:
       - id: check-json
       - id: check-added-large-files
       - id: check-toml
-      - id: file-contents-sorter
-        files: .spellcheck-allowlist
-        args: [./.spellcheck-allowlist]
       - id: pretty-format-json
         args:
           - "--autofix"
