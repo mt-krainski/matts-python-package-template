@@ -65,6 +65,7 @@ sync-versions = "python scripts/sync_versions.py"
 sync-precommit = "python scripts/sync_precommit.py"
 hooks-run = "pre-commit run --all-files"
 hooks-update = "pre-commit autoupdate"
+
 [tool.poe.tasks.test]
 sequence = [
     { cmd = "coverage run -m pytest --showlocals tests" },
@@ -80,4 +81,10 @@ sequence = [
 [tool.poe.tasks.test-full]
 sequence = [
     { ref = "test" },
+]
+
+[tool.poe.tasks.regenerate-example-package]
+sequence = [
+    { cmd = "cookiecutter . --no-input --overwrite-if-exists project_name='Example Package' -o ." },
+    { cmd = "git restore example-package/README.md" },
 ]
