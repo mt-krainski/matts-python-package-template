@@ -11,7 +11,7 @@ dependencies = []
 dev = [
     "coverage>=7.13.4,<8.0.0",
     "pytest>=9.0.3,<10.0.0",
-    "ruff>=0.15.10,<0.16.0",
+    "ruff>=0.15.11,<0.16.0",
 ]
 
 [build-system]
